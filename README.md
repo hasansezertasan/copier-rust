@@ -33,7 +33,7 @@ flow needs, with `gh` commands where an API exists.
 - A release workflow driven by release-please: a draft release, native builds with provenance attestations and a CycloneDX SBOM, crates.io publishing, and the release published last so that release immutability works. Archives are named so that mise's `github:` backend installs them with no configuration.
 - A release build check that builds and packages every target in pull requests that touch the release files.
 - PR title and branch name lint, zizmor, dependency review, OpenSSF Scorecard, labels, issue and PR templates, Renovate, `CODEOWNERS` and `SECURITY.md`.
-- `REPOSITORY_SETUP.md` (one-time settings), `docs/RELEASING.md`, `AGENTS.md` and `CONTRIBUTING.md`.
+- `REPOSITORY_SETUP.md` (how releases work and the one-time settings), `AGENTS.md` and `CONTRIBUTING.md`.
 
 `Cargo.toml`, `Cargo.lock`, `src/`, `README.md`, `AGENTS.md` and the release-please manifest are written once and
 then belong to the project; `copier update` refreshes everything else.
