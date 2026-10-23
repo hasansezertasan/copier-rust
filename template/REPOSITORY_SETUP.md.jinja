@@ -140,8 +140,8 @@ so drift can be detected. Add your own entries below the end fence; a hand edit 
 **[AGENT]**
 
 ```sh
-uvx --from cobo==0.6.0 cobo update
-uvx --from cobo==0.6.0 cobo gitignore dump Rust macOS Windows Linux VisualStudioCode JetBrains \
+uvx --python 3.14 --from cobo==0.6.0 cobo update
+uvx --python 3.14 --from cobo==0.6.0 cobo gitignore dump Rust macOS Windows Linux VisualStudioCode JetBrains \
   --out .gitignore --lock --eol lf
 git add .gitignore cobo.lock
 ```
@@ -149,10 +149,10 @@ git add .gitignore cobo.lock
 **[CHECK]**
 
 ```sh
-uvx --from cobo==0.6.0 cobo check --strict
+uvx --python 3.14 --from cobo==0.6.0 cobo check --strict
 ```
 
-To refresh later, run `cobo update` and `cobo sync`.
+To refresh later, run `uvx --python 3.14 --from cobo==0.6.0 cobo update` and then the same command with `sync`. cobo 0.6.0 needs Python 3.14, which `uvx` fetches if it is missing.
 
 ## Dependency graph
 
