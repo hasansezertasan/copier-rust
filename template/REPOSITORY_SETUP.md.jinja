@@ -159,6 +159,11 @@ available to jobs using the environment.
   --jq 'map(select(.name == "CARGO_REGISTRY_TOKEN")) | length')" = 0 ]
 ```
 
+**[HUMAN]** Only if the repository belongs to an organization and the token was an organization secret: remove
+this repository from that secret's access list in the organization's settings (`gh secret list --org ORG`
+shows it) instead of deleting the secret, which other repositories may share. The checks above cannot see it:
+GitHub's organization-secrets endpoint for a repository rejects user-owned repositories.
+
 A failing `gh` (no authentication, no access) prints nothing, so the comparison fails instead of reporting the
 secret as gone. The deletion commands above ignore errors on purpose, since the secret usually exists in only
 one scope; this check is what proves the result.
