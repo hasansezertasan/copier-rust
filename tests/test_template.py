@@ -237,3 +237,11 @@ def test_update_to_a_new_version_only_moves_the_answers_commit(tmp_path, version
     assert result.returncode == 0, result.stderr
     changed = {line[3:] for line in git("status", "--porcelain", cwd=dest).stdout.splitlines()}
     assert changed == {".copier-answers.yml"}
+
+
+def test_license_ends_with_a_single_newline_for_every_license(tmp_path, versioned_template):
+    for name, spdx in (("mit", "MIT"), ("apache", "Apache-2.0")):
+        dest = render(tmp_path, versioned_template, "-d", f"license={spdx}", name=name)
+        body = text(dest, "LICENSE")
+        assert body.endswith("\n") and not body.endswith("\n\n"), spdx
+        assert body.startswith(("MIT License", "\n                                 Apache")), spdx
