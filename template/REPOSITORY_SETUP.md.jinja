@@ -153,9 +153,15 @@ available to jobs using the environment.
 **[CHECK]**
 
 ```sh
-! gh secret list --env publish --repo [[ github_user ]]/[[ github_repo_name ]] | grep -q CARGO_REGISTRY_TOKEN
-! gh secret list --repo [[ github_user ]]/[[ github_repo_name ]] | grep -q CARGO_REGISTRY_TOKEN
+[ "$(gh secret list --env publish --repo [[ github_user ]]/[[ github_repo_name ]] --json name \
+  --jq 'map(select(.name == "CARGO_REGISTRY_TOKEN")) | length')" = 0 ]
+[ "$(gh secret list --repo [[ github_user ]]/[[ github_repo_name ]] --json name \
+  --jq 'map(select(.name == "CARGO_REGISTRY_TOKEN")) | length')" = 0 ]
 ```
+
+A failing `gh` (no authentication, no access) prints nothing, so the comparison fails instead of reporting the
+secret as gone. The deletion commands above ignore errors on purpose, since the secret usually exists in only
+one scope; this check is what proves the result.
 [% endif %][% if include_repo_ruleset %]
 ## Branch ruleset for `main`
 
