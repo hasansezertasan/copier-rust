@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/hasansezertasan/copier-rust/compare/v0.1.1...v0.1.2) (2026-10-23)
+
+
+### 🐛 Bug Fixes
+
+* require the package check and dependency review in the main ruleset ([#9](https://github.com/hasansezertasan/copier-rust/issues/9)) ([b7c9a86](https://github.com/hasansezertasan/copier-rust/commit/b7c9a8698f33183336dfe0fd7840b7f0ded5c83a))
+
 ## [0.1.1](https://github.com/hasansezertasan/copier-rust/compare/v0.1.0...v0.1.1) (2026-10-23)
 
 
