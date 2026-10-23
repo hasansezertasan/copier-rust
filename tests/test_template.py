@@ -44,7 +44,6 @@ def test_default_render_has_the_project_and_release_files(tmp_path, versioned_te
         "README.md",
         "AGENTS.md",
         "REPOSITORY_SETUP.md",
-        "docs/RELEASING.md",
         ".github/workflows/ci.yml",
         ".github/workflows/release.yml",
         ".github/workflows/release-build-check.yml",
@@ -95,7 +94,11 @@ def test_crates_publish_is_optional(tmp_path, versioned_template):
     assert "CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}" in release
     assert "secrets.CARGO_REGISTRY_TOKEN" not in release
     assert "cargo publish --dry-run" in text(on, ".github/workflows/ci.yml")
-    assert "Trusted Publishing" in text(on, "REPOSITORY_SETUP.md")
+    setup = text(on, "REPOSITORY_SETUP.md")
+    assert "Trusted Publishing" in setup
+    assert "First publish of a crate needs a token" in setup
+    assert "gh secret delete CARGO_REGISTRY_TOKEN" in setup
+    assert not (on / "docs/RELEASING.md").exists()
 
     off = render(tmp_path, versioned_template, "-d", "include_crates_publish=false", name="off")
     release = text(off, ".github/workflows/release.yml")
