@@ -54,6 +54,13 @@ def test_default_render_has_the_project_and_release_files(tmp_path, versioned_te
     ):
         assert (dest / rel).exists(), rel
     assert "cobo gitignore dump Rust" in text(dest, "REPOSITORY_SETUP.md")
+    required = [
+        c["context"]
+        for r in json.loads(text(dest, ".github/rulesets/main.json"))["rules"]
+        if r["type"] == "required_status_checks"
+        for c in r["parameters"]["required_status_checks"]
+    ]
+    assert "Package check" in required and "Dependency review" in required
     cargo = text(dest, "Cargo.toml")
     assert 'name = "demo"' in cargo
     assert 'version = "0.0.0"' in cargo
@@ -108,6 +115,13 @@ def test_crates_publish_is_optional(tmp_path, versioned_template):
     assert "crates-publish" not in release
     assert "needs: [release-please, build, sbom]" in release
     assert "cargo publish" not in text(off, ".github/workflows/ci.yml")
+    off_required = [
+        c["context"]
+        for r in json.loads(text(off, ".github/rulesets/main.json"))["rules"]
+        if r["type"] == "required_status_checks"
+        for c in r["parameters"]["required_status_checks"]
+    ]
+    assert "Package check" not in off_required and "Dependency review" in off_required
     assert "crates.io" not in text(off, "REPOSITORY_SETUP.md")
     assert "cargo install demo" not in text(off, "README.md")
 
