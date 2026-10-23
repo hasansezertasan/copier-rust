@@ -244,4 +244,4 @@ def test_license_ends_with_a_single_newline_for_every_license(tmp_path, versione
         dest = render(tmp_path, versioned_template, "-d", f"license={spdx}", name=name)
         body = text(dest, "LICENSE")
         assert body.endswith("\n") and not body.endswith("\n\n"), spdx
-        assert body.startswith(("MIT License", "\n                                 Apache")), spdx
+        assert body.startswith(("MIT License", "                                 Apache License")), spdx
