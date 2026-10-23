@@ -130,6 +130,30 @@ gh api -X POST repos/[[ github_user ]]/[[ github_repo_name ]]/rulesets --input .
 gh api repos/[[ github_user ]]/[[ github_repo_name ]]/rulesets --jq '[.[].name] | index("main") != null' | grep -qx true
 ```
 [% endif %]
+## Managed `.gitignore`
+
+The generated `.gitignore` only ignores `/target`. [cobo](https://github.com/hasansezertasan/cobo) replaces it
+with the upstream [github/gitignore](https://github.com/github/gitignore) boilerplates for Rust, the three
+operating systems and the common editors, inside a sealed fence, and records the upstream commit in `cobo.lock`
+so drift can be detected. Add your own entries below the end fence; a hand edit inside the fence breaks its seal.
+
+**[AGENT]**
+
+```sh
+uvx --from cobo==0.6.0 cobo update
+uvx --from cobo==0.6.0 cobo gitignore dump Rust macOS Windows Linux VisualStudioCode JetBrains \
+  --out .gitignore --lock --eol lf
+git add .gitignore cobo.lock
+```
+
+**[CHECK]**
+
+```sh
+uvx --from cobo==0.6.0 cobo check --strict
+```
+
+To refresh later, run `cobo update` and `cobo sync`.
+
 ## Dependency graph
 
 `dependency-review.yml` fails a pull request that adds a vulnerable dependency. It reads GitHub's dependency
