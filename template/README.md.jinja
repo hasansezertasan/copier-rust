@@ -1,0 +1,37 @@
+# [[ bin_name ]]
+
+[[ short_description ]]
+
+## Install
+
+[% if include_crates_publish %]With [mise](https://mise.jdx.dev) (prebuilt binary, no Rust needed):
+
+```sh
+mise use -g github:[[ github_user ]]/[[ github_repo_name ]]
+```
+
+With Cargo:
+
+```sh
+cargo install [[ crate_name ]] --locked
+```
+[% else %]With [mise](https://mise.jdx.dev) (prebuilt binary, no Rust needed):
+
+```sh
+mise use -g github:[[ github_user ]]/[[ github_repo_name ]]
+```
+
+From source: `cargo install --git https://github.com/[[ github_user ]]/[[ github_repo_name ]] --locked`.
+[% endif %]
+[% if apt_packages %]
+Building from source on Debian or Ubuntu needs `[[ apt_packages ]]`.
+[% endif %]
+## Development
+
+```sh
+cargo fmt --all --check
+cargo clippy --all-targets -- -D warnings
+cargo test
+```
+
+Releases are automatic; see [docs/RELEASING.md](docs/RELEASING.md).

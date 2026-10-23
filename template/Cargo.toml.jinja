@@ -1,0 +1,23 @@
+[package]
+name = "[[ crate_name ]]"
+# release-please bumps this; the first release lands as 0.1.0.
+version = "0.0.0"
+edition = "2024"
+rust-version = "[[ rust_version ]]"
+description = "[[ short_description ]]"
+license = "[[ license ]]"
+repository = "https://github.com/[[ github_user ]]/[[ github_repo_name ]]"
+readme = "README.md"
+exclude = [".github/", "docs/", "AGENTS.md", "CLAUDE.md", "REPOSITORY_SETUP.md"]
+
+[% raw %][[bin]][% endraw %]
+
+name = "[[ bin_name ]]"
+path = "src/main.rs"
+
+[dependencies]
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

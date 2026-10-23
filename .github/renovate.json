@@ -1,0 +1,11 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>hasansezertasan/renovate-config:python"],
+  "packageRules": [
+    {
+      "description": "Freeze everything under template/**. Those files are seed values for projects generated from this template; each generated project ships its own Renovate config and owns its bumps. Managing them here too makes `copier update` conflict, because copier's 3-way merge sees the template render and the downstream file moving the same literal to different values.",
+      "matchFileNames": ["template/**"],
+      "enabled": false
+    }
+  ]
+}

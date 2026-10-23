@@ -1,0 +1,12 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v0.2.1
+_src_path: https://github.com/hasansezertasan/copier-copier.git
+author_email: hasansezertasan@gmail.com
+author_name: Hasan Sezer Tasan
+copyright_start_year: '2026'
+description: 'A Copier template for Rust projects: CI, a release-please driven release
+    flow with immutable GitHub releases, and crates.io trusted publishing.'
+license: MIT
+owner: hasansezertasan
+python_version: '3.14'
+subject: rust

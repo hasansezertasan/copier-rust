@@ -1,0 +1,188 @@
+# Template repo configuration. This file is yours: copier-copier wrote it once
+# and will not overwrite it on `copier update`.
+_subdirectory: template
+_min_copier_version: "9.10.3"
+_templates_suffix: .jinja
+_answers_file: .copier-answers.yml
+
+# The generated workflows are full of GitHub `${{ ... }}` expressions and shell
+# `[[ ... ]]`/`<<` constructs, which collide with Jinja's defaults. Only files
+# with a `.jinja` suffix are rendered, and they use these delimiters instead:
+#   [[ variable ]]    [% block %]    [# comment #]
+# A literal `[[` in a rendered file (Cargo's `[[bin]]`, bash `[[ ]]`) must be
+# wrapped in `[% raw %]...[% endraw %]`. The delimiters also apply to the expressions
+# in this file (defaults, validators), so write them with `[[ ]]` and `[% %]` here too.
+_envops:
+  variable_start_string: "[["
+  variable_end_string: "]]"
+  block_start_string: "[%"
+  block_end_string: "%]"
+  comment_start_string: "[#"
+  comment_end_string: "#]"
+  keep_trailing_newline: true
+  # Block tags on their own line must not leave blank lines behind in the output.
+  trim_blocks: true
+  lstrip_blocks: true
+
+# Written once, then owned by the generated project: `copier update` must not fight
+# a project's own dependencies, sources or release state.
+_skip_if_exists:
+  - Cargo.toml
+  - Cargo.lock
+  - src
+  - README.md
+  - AGENTS.md
+  - .github/release-please-manifest.json
+
+# No `_tasks`: a task makes the template "unsafe" and forces --trust, which the
+# hosted Renovate app cannot pass, so it could no longer open `copier update` PRs.
+_message_after_copy: |
+  [[ github_repo_name ]] is ready in [[ _copier_conf.dst_path ]].
+
+  Next:
+    cargo build
+    git init -b main && git add -A && git commit -m "feat: add [[ bin_name ]]"
+  Then follow REPOSITORY_SETUP.md: it lists the one-time GitHub settings the
+  release flow needs (immutable releases, a main-only `publish` environment,
+  and crates.io trusted publishing).
+
+# --- identity -----------------------------------------------------------------
+
+github_user:
+  type: str
+  help: GitHub owner of the repository
+  default: hasansezertasan
+
+github_repo_name:
+  type: str
+  help: Repository name
+  validator: >-
+    [% if not github_repo_name | regex_search('^[a-z0-9][a-z0-9._-]*$') %]
+    Use lowercase letters, digits, dots, hyphens or underscores, e.g. "amb".
+    [% endif %]
+
+crate_name:
+  type: str
+  help: Crate name on crates.io (check that it is free before the first release)
+  default: "[[ github_repo_name ]]"
+  validator: >-
+    [% if not crate_name | regex_search('^[a-z][a-z0-9_-]*$') %]
+    Use a lowercase crate name: letters, digits, hyphens or underscores, starting with a letter.
+    [% endif %]
+
+bin_name:
+  type: str
+  help: Name of the installed binary; also names the release archives
+  default: "[[ crate_name ]]"
+  validator: >-
+    [% if not bin_name | regex_search('^[a-z][a-z0-9_-]*$') %]
+    Use a lowercase binary name: letters, digits, hyphens or underscores, starting with a letter.
+    [% endif %]
+
+short_description:
+  type: str
+  help: One-line description; used for Cargo.toml and the repository
+  default: A command-line tool written in Rust.
+
+author_full_name:
+  type: str
+  help: Author name, used in the LICENSE
+  default: Hasan Sezer Tasan
+
+author_email:
+  type: str
+  help: Author email, used in the LICENSE
+
+# Visible on purpose: copier only stores asked questions in the answers file, so a
+# hidden default would be re-evaluated and drift on every `copier update`.
+copyright_year:
+  type: int
+  help: First year of the LICENSE copyright line, rendered as "<year>-present" so it never goes stale
+  default: "[[ '%Y' | strftime ]]"
+  validator: >-
+    [% if copyright_year < 1990 or copyright_year > 2100 %]
+    Use a four-digit year, e.g. 2026.
+    [% endif %]
+
+license:
+  type: str
+  help: SPDX license identifier
+  default: MIT
+  choices:
+    - MIT
+    - Apache-2.0
+
+# --- build and release ---------------------------------------------------------
+
+rust_version:
+  type: str
+  help: Minimum supported Rust version (written to Cargo.toml and checked in CI). Let-chains need 1.88.
+  default: "1.88"
+  validator: >-
+    [% if not rust_version | regex_search('^1\.[0-9]{2,3}(\.[0-9]+)?$') %]
+    Use a Rust version such as "1.88".
+    [% endif %]
+
+apt_packages:
+  type: str
+  help: >-
+    Space-separated apt packages the project needs to build on Linux, for example
+    "libasound2-dev pkg-config" for audio. Leave empty if none. Linux release
+    builds are glibc-only on native runners, so musl and cross builds are out.
+  default: ""
+  validator: >-
+    [% if apt_packages and not apt_packages | regex_search('^[a-z0-9][a-z0-9.+:-]*( [a-z0-9][a-z0-9.+:-]*)*$') %]
+    Use space-separated Debian package names, e.g. "libasound2-dev pkg-config".
+    [% endif %]
+
+targets:
+  type: yaml
+  multiselect: true
+  help: Release targets. Each one is built natively on its own runner.
+  choices:
+    Linux x86_64 (glibc): x86_64-unknown-linux-gnu
+    Linux aarch64 (glibc): aarch64-unknown-linux-gnu
+    macOS Apple silicon: aarch64-apple-darwin
+    macOS Intel: x86_64-apple-darwin
+    Windows x86_64: x86_64-pc-windows-msvc
+  default:
+    - x86_64-unknown-linux-gnu
+    - aarch64-unknown-linux-gnu
+    - aarch64-apple-darwin
+    - x86_64-apple-darwin
+    - x86_64-pc-windows-msvc
+  validator: >-
+    [% if not targets %]
+    Pick at least one target.
+    [% endif %]
+
+# Hidden: the runner and archive format for each target. One place to edit.
+target_runners:
+  type: yaml
+  when: false
+  default:
+    x86_64-unknown-linux-gnu: {os: ubuntu-22.04, ext: tar.gz}
+    aarch64-unknown-linux-gnu: {os: ubuntu-22.04-arm, ext: tar.gz}
+    aarch64-apple-darwin: {os: macos-14, ext: tar.gz}
+    x86_64-apple-darwin: {os: macos-15-intel, ext: tar.gz}
+    x86_64-pc-windows-msvc: {os: windows-2022, ext: zip}
+
+include_crates_publish:
+  type: bool
+  help: >-
+    Publish to crates.io from the release workflow with trusted publishing?
+    The very first publish of a crate needs an API token and a verified email
+    on your crates.io account; REPOSITORY_SETUP.md walks through it.
+  default: true
+
+# --- repository ----------------------------------------------------------------
+
+include_repo_settings:
+  type: bool
+  help: Ship .github/settings.yml (squash-only merges, delete merged branches) for the Settings app?
+  default: true
+
+include_repo_ruleset:
+  type: bool
+  help: Ship a branch ruleset for main (PR required, CI checks required), applied with a gh command?
+  default: true

@@ -1,0 +1,18 @@
+[project]
+name = "copier-rust"
+version = "0.0.0"
+description = "A Copier template for Rust projects: CI, a release-please driven release flow with immutable GitHub releases, and crates.io trusted publishing."
+requires-python = ">=3.12"
+
+[dependency-groups]
+dev = [
+    "copier==9.18.2",
+    "pytest>=8",
+    "pyyaml>=6",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,244 @@
+---
+name: Release
+on:
+  # DO NOT REMOVE workflow_dispatch. `finalize-release` re-dispatches this
+  # workflow with `gh workflow run` to reconcile a phantom release PR, and that
+  # API needs the trigger to exist. workflow_dispatch is also the documented
+  # exception to GITHUB_TOKEN loop-prevention, so that step needs no PAT. A
+  # manual run executes this file from the *selected branch*; the containment is
+  # the `publish` environment's main-only deployment-branch policy, which GitHub
+  # evaluates outside this file (see docs/RELEASING.md).
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+permissions: {}
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    name: Release Please
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      issues: write  # IMPORTANT: release-please manages PR labels via the Issues API
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+      sha: ${{ steps.release.outputs.sha }}
+    steps:
+      - name: Release Please
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7  # v5.0.0
+        with:
+          config-file: .github/release-please-config.json
+          manifest-file: .github/release-please-manifest.json
+  build:
+    name: Build (${{ matrix.target }})
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    timeout-minutes: 30
+    # The main-only deployment policy on this environment protects attestation
+    # minting and crates.io publishing from branch dispatches.
+    environment: publish
+    permissions:
+      attestations: write  # IMPORTANT: publish Sigstore build provenance to GitHub
+      contents: read  # IMPORTANT: actions/checkout needs read access to the repo
+      id-token: write  # IMPORTANT: mint the Sigstore signing certificate
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          # Native runners only, so system libraries link normally; musl and cross
+          # builds are not offered. ubuntu-22.04 keeps the glibc floor low.
+[% for t in targets %]
+          - { target: [[ t ]], os: [[ target_runners[t].os ]], ext: [[ target_runners[t].ext ]] }
+[% endfor %]
+    env:
+      TARGET: ${{ matrix.target }}
+      EXT: ${{ matrix.ext }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          # The commit the release was tagged at, not the commit that triggered this
+          # run: they differ if a later push or manual dispatch re-runs the release.
+          ref: ${{ needs.release-please.outputs.sha }}
+          persist-credentials: false
+[% if apt_packages %]
+      - name: Install system packages
+        if: ${{ runner.os == 'Linux' }}
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends [[ apt_packages ]]
+[% endif %]
+      # Every step that expands $TARGET runs in bash: the Windows runner's default
+      # shell is PowerShell, where "$TARGET" stays empty.
+      - name: Install toolchain
+        shell: bash
+        run: rustup toolchain install stable --profile minimal --target "$TARGET"
+      - name: Build
+        # No cargo cache here on purpose: release artifacts must not be built
+        # from a cache a pull request could have poisoned.
+        shell: bash
+        run: cargo build --release --locked --target "$TARGET"
+      - name: Package
+        shell: bash
+        run: bash .github/scripts/package-release.sh
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8  # v4.2.2
+        with:
+          subject-path: dist/[[ bin_name ]]-*.${{ matrix.ext }}
+      - name: Upload archive
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: dist-${{ matrix.target }}
+          path: dist/
+          if-no-files-found: error
+  sbom:
+    name: Generate SBOM (CycloneDX)
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read  # IMPORTANT: actions/checkout needs read access to the repo
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          # The commit the release was tagged at, not the commit that triggered this
+          # run: they differ if a later push or manual dispatch re-runs the release.
+          ref: ${{ needs.release-please.outputs.sha }}
+          persist-credentials: false
+      - name: Install toolchain
+        run: rustup toolchain install stable --profile minimal
+      - name: Install cargo-cyclonedx
+        uses: taiki-e/install-action@a4d3f3f761dcd95cce1b72cb61cb6d1963438177  # v2.87.30
+        with:
+          tool: cargo-cyclonedx@0.5.9
+      - name: Generate CycloneDX SBOM
+        run: cargo cyclonedx --format json --override-filename [[ bin_name ]]-sbom.cdx
+      - name: Upload SBOM
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: sbom
+          path: [[ bin_name ]]-sbom.cdx.json
+          if-no-files-found: error
+[% if include_crates_publish %]
+  crates-publish:
+    name: Publish to crates.io
+    needs: [release-please, build]
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    timeout-minutes: 15
+    environment:
+      name: publish
+      url: https://crates.io/crates/[[ crate_name ]]/${{ needs.release-please.outputs.version }}
+    permissions:
+      contents: read  # IMPORTANT: actions/checkout needs read access to the repo
+      id-token: write  # IMPORTANT: mandatory for crates.io Trusted Publishing (OIDC token exchange)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          # The commit the release was tagged at, not the commit that triggered this
+          # run: they differ if a later push or manual dispatch re-runs the release.
+          ref: ${{ needs.release-please.outputs.sha }}
+          persist-credentials: false
+[% if apt_packages %]
+      - name: Install system packages
+        # `cargo publish` verifies the package by building it.
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends [[ apt_packages ]]
+[% endif %]
+      - name: Install toolchain
+        run: rustup toolchain install stable --profile minimal
+      - name: Authenticate with crates.io
+        # Trusted Publishing: exchanges this job's OIDC token for a short-lived
+        # crates.io token (it expires after 30 minutes and the action revokes it
+        # when the job ends). Needs the trusted publisher configured on the crate
+        # (owner, repo, workflow `release.yml`, environment `publish`). Kept right
+        # before the publish so the slow steps above do not eat into the lifetime.
+        id: auth
+        uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9  # v1.0.6
+      - name: Publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+        run: cargo publish --locked
+[% endif %]
+  attach-github-release:
+    name: Attach assets to the draft release
+    needs: [release-please, build, sbom[% if include_crates_publish %], crates-publish[% endif %]]
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # IMPORTANT: mandatory to upload to the GitHub Release
+    steps:
+      - name: Download assets
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          path: dist/
+          merge-multiple: true
+      - name: Attach assets to the draft release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pass GitHub context through env, never interpolated into the shell.
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          # Guard the empty case first: `xargs` with no input never invokes gh and
+          # exits 0, which would silently publish a release with zero assets.
+          test "$(find dist -type f | wc -l)" -gt 0 \
+            || { echo "::error::no assets found under dist/ to attach to the release"; exit 1; }
+          find dist -type f -print0 | xargs -0 gh release upload "$TAG_NAME" --clobber --repo "$REPO"
+  finalize-release:
+    name: Publish the GitHub Release
+    needs: [release-please, attach-github-release]
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # IMPORTANT: mandatory to un-draft the GitHub Release
+      pull-requests: write  # IMPORTANT: mandatory to close the phantom release PR
+      actions: write  # IMPORTANT: mandatory to re-dispatch this workflow
+    steps:
+      - name: Publish the draft release
+        # With release immutability on, publishing locks the tag and assets, so
+        # this must be the last step touching the release. Known cosmetic limit:
+        # release-please's "Created releases" comment on the merged release PR
+        # links the draft's transient `untagged-<hash>` URL, which 404s once the
+        # release is published. The release itself is correct.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+          REPO: ${{ github.repository }}
+        run: gh release edit "$TAG_NAME" --draft=false --repo "$REPO"
+      - name: Reconcile the next release PR against the published release
+        # release-please derives its commit range from the latest *published*
+        # release and ignores drafts, so a release PR opened in this same run was
+        # computed with no baseline and re-lists shipped commits. It will not
+        # self-heal, so close it now and re-dispatch: the new run sees the
+        # published release and recreates a correct PR only if real unreleased
+        # commits exist, which bounds the re-trigger to one run.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
+          WORKFLOW: ${{ github.workflow }}
+        run: |
+          # release-please's branch carries the component, e.g.
+          # release-please--branches--main--components--[[ crate_name ]], so match by prefix.
+          # gh lists only the 30 newest PRs by default and the prefix filter runs
+          # client-side, so raise the limit or the release PR could fall outside it.
+          pr="$(gh pr list --state open \
+            --repo "$REPO" \
+            --limit 200 \
+            --json number,headRefName \
+            --jq '[.[] | select(.headRefName | startswith("release-please--branches--" + env.REF_NAME))] | .[0].number // empty')"
+          if [ -n "$pr" ]; then
+            echo "Closing phantom release PR #$pr"
+            gh pr close "$pr" --delete-branch --repo "$REPO"
+          fi
+          gh workflow run "$WORKFLOW" --ref "$REF_NAME" --repo "$REPO"
