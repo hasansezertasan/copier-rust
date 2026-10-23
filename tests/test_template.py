@@ -54,6 +54,7 @@ def test_default_render_has_the_project_and_release_files(tmp_path, versioned_te
         ".github/settings.yml",
     ):
         assert (dest / rel).exists(), rel
+    assert "cobo gitignore dump Rust" in text(dest, "REPOSITORY_SETUP.md")
     cargo = text(dest, "Cargo.toml")
     assert 'name = "demo"' in cargo
     assert 'version = "0.0.0"' in cargo
