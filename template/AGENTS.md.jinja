@@ -4,6 +4,6 @@
   (`feature/add-thing`, `bugfix/fix-thing`, `chore/update-thing`). CI lints PR titles and branch names.
 - Run before pushing: `cargo fmt --all --check`, `cargo clippy --locked --all-targets -- -D warnings`, `cargo test --locked`.
 - The minimum supported Rust version is `[[ rust_version ]]`; CI builds on it, so keep `rust-version` in `Cargo.toml` honest.
-- Releases are automatic: merge the release-please PR. Never tag by hand. See `docs/RELEASING.md`.
+- Releases are automatic: merge the release-please PR. Never tag by hand. See `REPOSITORY_SETUP.md`.
 - One-time GitHub settings (immutable releases, the `publish` environment[% if include_crates_publish %], crates.io trusted publishing[% endif %]) are in `REPOSITORY_SETUP.md`.
 - Pin every GitHub Action by commit SHA (zizmor enforces it) and keep `permissions:` minimal.
