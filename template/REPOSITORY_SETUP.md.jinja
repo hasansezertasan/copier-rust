@@ -137,12 +137,14 @@ above is published with an API token from your machine. The workflow never reads
 
 **Moving a repository from token-based publishing.** Changing the workflow does not delete the
 `CARGO_REGISTRY_TOKEN` secret or revoke the token. After the first release that publishes through trusted
-publishing succeeds:
+publishing succeeds, remove it. The secret may sit in the `publish` environment or, if it was added at
+repository level, in the repository secrets, which jobs using the environment can read as well. Remove both.
 
 **[AGENT]**
 
 ```sh
-gh secret delete CARGO_REGISTRY_TOKEN --env publish --repo [[ github_user ]]/[[ github_repo_name ]]
+gh secret delete CARGO_REGISTRY_TOKEN --env publish --repo [[ github_user ]]/[[ github_repo_name ]] || true
+gh secret delete CARGO_REGISTRY_TOKEN --repo [[ github_user ]]/[[ github_repo_name ]] || true
 ```
 
 **[HUMAN]** Revoke the token at https://crates.io/settings/tokens, so no long-lived publish credential stays
@@ -152,6 +154,7 @@ available to jobs using the environment.
 
 ```sh
 ! gh secret list --env publish --repo [[ github_user ]]/[[ github_repo_name ]] | grep -q CARGO_REGISTRY_TOKEN
+! gh secret list --repo [[ github_user ]]/[[ github_repo_name ]] | grep -q CARGO_REGISTRY_TOKEN
 ```
 [% endif %][% if include_repo_ruleset %]
 ## Branch ruleset for `main`

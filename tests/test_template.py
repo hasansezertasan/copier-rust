@@ -97,7 +97,8 @@ def test_crates_publish_is_optional(tmp_path, versioned_template):
     setup = text(on, "REPOSITORY_SETUP.md")
     assert "Trusted Publishing" in setup
     assert "First publish of a crate needs a token" in setup
-    assert "gh secret delete CARGO_REGISTRY_TOKEN" in setup
+    assert "gh secret delete CARGO_REGISTRY_TOKEN --env publish" in setup
+    assert "gh secret delete CARGO_REGISTRY_TOKEN --repo" in setup
     assert "REPOSITORY_SETUP.md" in text(on, "docs/RELEASING.md")
 
     off = render(tmp_path, versioned_template, "-d", "include_crates_publish=false", name="off")
