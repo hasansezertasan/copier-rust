@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/hasansezertasan/copier-rust/compare/v0.1.0...v0.1.1) (2026-10-23)
+
+
+### 🐛 Bug Fixes
+
+* end the rendered LICENSE with a newline ([#7](https://github.com/hasansezertasan/copier-rust/issues/7)) ([14569bc](https://github.com/hasansezertasan/copier-rust/commit/14569bc1063d0bfc13694ad287e8bcd96fbd5779))
+
 ## 0.1.0 (2026-10-23)
 
 
