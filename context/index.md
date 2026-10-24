@@ -64,7 +64,7 @@ Why copier-rust is built the way it is.
 
 ## R
 
-- [release-flow.md](release-flow.md) — One workflow, draft-first publishing, the tagged commit, failed-run recovery, and release PRs waiting for approval.
+- [release-flow.md](release-flow.md) — One workflow, draft-first publishing, the tagged commit, failed-run recovery, and release PRs needing the admin bypass.
 - [repo-tooling.md](repo-tooling.md) — `.config/` layout, cobo drift checks, and where tool pins live.
 
 ## S

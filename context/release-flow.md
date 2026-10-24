@@ -56,19 +56,19 @@ Build jobs check out release-please's `sha` output instead of the commit that tr
 
 An unpublished draft burns nothing: delete the draft with its tag and revert the release commit's version bump, so release-please proposes the same version again. A published immutable release's tag can never be reused, so recovery has to happen before the final publish step.
 
-## Release PRs opened with GITHUB_TOKEN wait for approval
+## Release PRs opened with GITHUB_TOKEN need the admin bypass
 
 **Id:** 9e9e5709-263f-45ea-8df8-977c7eb524d4
 **Type:** constraint
 **Type:** workaround
 **Status:** active
 **Evidence:** confirmed
-**Source:** `docs/design.md`, "Traps" 6; the conclusions of the `pull_request` runs on the release-please branch (`action_required`, then `success` once approved), 2026-10-24
+**Source:** `docs/design.md`, "Traps" 6; the workflow runs on the release-please branch (`pull_request` runs `action_required`, no `pull_request_target` runs at all), 2026-10-24
 **Revisit when:** a token that triggers workflows is adopted for release-please
 
-Required checks stay pending on release-please's pull request until a user with write access approves its `pull_request` workflow runs, which start in an approval-required state (`action_required`) because the PR is opened with `GITHUB_TOKEN`. Approve the runs, wait for the checks, then merge. The generated ruleset also lets repository admins bypass through a pull request.
+Release-please's pull request is opened with `GITHUB_TOKEN`, so its `pull_request` workflow runs start in an approval-required state (`action_required`) and run once a user with write access approves them. The `pull_request_target` checks (`Validate PR title`, `Validate branch name`) never run on it, so they stay pending and the PR is merged by a repository admin through the ruleset's bypass through a pull request.
 
-**Reason:** GitHub holds `pull_request` workflows created by `GITHUB_TOKEN` for approval; see "One workflow for release, builds and publish" for why no personal access token is used. This corrects the earlier reading, in these notes and in `docs/design.md`, that such a PR triggers no runs at all.
+**Reason:** GitHub holds `pull_request` workflows created by `GITHUB_TOKEN` for approval; see "One workflow for release, builds and publish" for why no personal access token is used. This corrects the earlier reading, in these notes and in `docs/design.md`, that such a PR triggers no runs at all: the `pull_request` ones exist, waiting for approval.
 
 ## The release-please branch name carries the component
 
