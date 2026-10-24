@@ -235,6 +235,6 @@ gh api --silent repos/[[ github_user ]]/[[ github_repo_name ]]/dependency-graph/
 
 ## Known limitations
 
-- When release-please opens a release PR or updates its branch with `GITHUB_TOKEN`, the `pull_request` workflows start in an approval-required state (`action_required`) and run once a user with write access approves them. The `pull_request_target` checks (`Validate PR title`, `Validate branch name`) never run on that PR, so merge it as a repository admin through the ruleset bypass.
+- When release-please opens a release PR or updates its branch with `GITHUB_TOKEN`, the `pull_request` workflows start in an approval-required state (`action_required`) and run once a user with write access approves them. The `pull_request_target` checks (`Validate PR title`, `Validate branch name`) never run on that PR[% if include_repo_ruleset %], so merge it as a repository admin through the ruleset bypass[% else %]; if you add a ruleset that requires them, give repository admins a bypass through a pull request[% endif %].
 - release-please's "Created releases" comment links the draft's transient URL, which 404s after publication. The release itself is correct.
 - If a release run fails after the draft is created, do not delete the tag once the release is published: an immutable release's tag can never be reused. A failed run before publication leaves only a draft; delete the draft and its tag, and revert the release commit's version bump so release-please proposes the same version again.

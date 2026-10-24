@@ -100,6 +100,17 @@ def test_setup_guide_explains_why_release_prs_need_the_admin_bypass(tmp_path, ve
     assert "does not trigger other workflows" not in guide
 
 
+def test_the_bypass_advice_follows_the_ruleset_toggle(tmp_path, versioned_template):
+    off = text(
+        render(tmp_path, versioned_template, "-d", "include_repo_ruleset=false", name="no-ruleset"),
+        "REPOSITORY_SETUP.md",
+    )
+    assert "through the ruleset bypass" not in off
+    assert "if you add a ruleset that requires them" in off
+    on = text(render(tmp_path, versioned_template, name="ruleset"), "REPOSITORY_SETUP.md")
+    assert "through the ruleset bypass" in on
+
+
 def test_crates_publish_is_optional(tmp_path, versioned_template):
     on = render(tmp_path, versioned_template, name="on")
     release = text(on, ".github/workflows/release.yml")
