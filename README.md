@@ -1,5 +1,7 @@
 # copier-rust
 
+[![Keep the Why · live](https://hasansezertasan.github.io/copier-rust/dashboard/live/badge-entries.svg)](https://hasansezertasan.github.io/copier-rust/dashboard/live/)
+
 A [Copier](https://copier.readthedocs.io) template for Rust command-line tools: CI, a release-please driven
 release flow with immutable GitHub releases and native binaries, and crates.io trusted publishing.
 

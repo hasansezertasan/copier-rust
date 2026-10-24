@@ -1,0 +1,54 @@
+---
+name: Keep the Why Dashboard
+# Publishes the read-only Keep the Why dashboard (index.html, state.json and the live badges) to GitHub
+# Pages under /dashboard/live/. Needs the repository's Pages source set to "GitHub Actions".
+"on":
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    name: Deploy dashboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # The dashboard dates entries by their Git history.
+          fetch-depth: 0
+          persist-credentials: false
+      # Runs the dashboard and Python pinned in .config/mise.toml and .python-version, so Renovate's pins are
+      # the versions deployed here.
+      - name: Install mise
+        uses: jdx/mise-action@9b200bcecbfd6303e69a4a261b2e09e3757440a7  # v5.2.0
+        with:
+          install: false
+          cache: false
+      - name: Export dashboard
+        run: |
+          mise trust .config/mise.toml
+          mise install
+          mise run dashboard-export
+      # The Pages root has no page of its own; send it to the dashboard so the deployment URL does not 404.
+      - name: Add root redirect
+        run: |
+          printf '%s\n' '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=dashboard/live/"><title>Keep the Why</title>' > site/index.html
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
+        with:
+          path: site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346  # v5.0.1

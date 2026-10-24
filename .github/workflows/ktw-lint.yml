@@ -1,0 +1,27 @@
+---
+name: Keep the Why Lint
+# Checks the structure of .keep-the-why and context/ (required fields, valid values, index
+# consistency), never the content. Warnings do not fail the run; set `strict: "true"` to change that.
+"on":
+  push:
+    branches: [main]
+  pull_request:
+permissions: {}
+jobs:
+  ktw-lint:
+    name: Lint context/
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      # Pinned to a linter release (action and linter together) so Renovate's pin is the version tested here.
+      - name: Lint
+        uses: oliver-zehentleitner/keep-the-why@2771046616a3c6bcd62916ed072f71feb5afd222  # lint-v0.20.3.0
+        with:
+          path: "."
+          strict: "false"
