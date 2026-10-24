@@ -47,9 +47,10 @@ Each of these cost a failed run or a broken release on amb.
 5. **crates.io needs a verified email** on the account before anything can be published.
 6. **Release PRs opened with `GITHUB_TOKEN` cannot satisfy every required check.** Their `pull_request` workflows
    start in an approval-required state (`action_required`) and run once a user with write access approves them.
-   `Validate PR title` and `Validate branch name` run on `pull_request_target`, which a token-created PR never
-   triggers, so they stay pending. The ruleset therefore lets repository admins bypass through a pull request,
-   which is how the release PR is merged.
+   `Validate PR title` and `Validate branch name` run on `pull_request_target`, which release-please's own
+   creation and updates (made with `GITHUB_TOKEN`) never trigger, so they stay pending. Reopening the PR by hand
+   starts both and editing its title starts the title check, but the ruleset also lets repository admins bypass
+   through a pull request, which is how the release PR is merged.
 7. **mise `minimum_release_age`** can hide a fresh release from `@latest`, and the versions host can lag a few
    hours; `MISE_USE_VERSIONS_HOST=0` asks GitHub directly.
 
