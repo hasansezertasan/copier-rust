@@ -5,6 +5,8 @@ python = "{{ get_env(name='PYTHON_VERSION', default=read_file(path=config_root ~
 uv = "0.13.0"
 # cobo generates the sealed boilerplate blocks (.gitignore, .gitattributes, .editorconfig).
 "pipx:cobo" = "0.6.0"
+# keep-the-why-dashboard exports the Keep the Why dashboard published to GitHub Pages.
+"pipx:keep-the-why-dashboard" = "0.11.15"
 
 [tasks.test]
 description = "Run the template test suite"
@@ -13,3 +15,7 @@ run = "uv run pytest"
 [tasks.cobo-check]
 description = "Check cobo-managed files for drift from their upstream sources"
 run = "mise exec -- cobo update && mise exec -- cobo check --strict"
+
+[tasks.dashboard-export]
+description = "Export the Keep the Why dashboard into site/dashboard/live"
+run = "mise exec -- ktw-dashboard --export site/dashboard/live ."
