@@ -63,10 +63,10 @@ An unpublished draft burns nothing: delete the draft with its tag and revert the
 **Type:** workaround
 **Status:** active
 **Evidence:** confirmed
-**Source:** `docs/design.md`, "Traps" 6; the workflow runs on the release-please branch (`pull_request` runs `action_required`, no `pull_request_target` runs at all), 2026-10-24
+**Source:** `docs/design.md`, "Traps" 6; the workflow runs on the release-please branch (`pull_request` runs `action_required`, no `pull_request_target` runs from release-please's own pushes), 2026-10-24
 **Revisit when:** a token that triggers workflows is adopted for release-please
 
-Release-please's pull request is opened with `GITHUB_TOKEN`, so its `pull_request` workflow runs start in an approval-required state (`action_required`) and run once a user with write access approves them. The `pull_request_target` checks (`Validate PR title`, `Validate branch name`) never run on it, so they stay pending and the PR is merged by a repository admin through the ruleset's bypass through a pull request.
+Release-please's pull request is opened with `GITHUB_TOKEN`, so its `pull_request` workflow runs start in an approval-required state (`action_required`) and run once a user with write access approves them. The `pull_request_target` checks (`Validate PR title`, `Validate branch name`) do not run when release-please creates or updates it, so they stay pending. Reopening the PR by hand starts both and editing its title starts the title check; the usual path is that a repository admin merges it through the ruleset's bypass through a pull request.
 
 **Reason:** GitHub holds `pull_request` workflows created by `GITHUB_TOKEN` for approval; see "One workflow for release, builds and publish" for why no personal access token is used. This corrects the earlier reading, in these notes and in `docs/design.md`, that such a PR triggers no runs at all: the `pull_request` ones exist, waiting for approval.
 
