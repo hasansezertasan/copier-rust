@@ -45,8 +45,9 @@ Each of these cost a failed run or a broken release on amb.
    revert the release commit's version bump, so release-please proposes the same version again. A published
    immutable release's tag can never be reused.
 5. **crates.io needs a verified email** on the account before anything can be published.
-6. **Release PRs opened with `GITHUB_TOKEN` do not run CI**, so required checks stay pending on them. The
-   ruleset lets repository admins bypass through a pull request.
+6. **Release PRs opened with `GITHUB_TOKEN` start their `pull_request` workflows in an approval-required state**
+   (`action_required`), so required checks stay pending until a user with write access approves the runs. Approve
+   them, wait for the checks, then merge. The ruleset also lets repository admins bypass through a pull request.
 7. **mise `minimum_release_age`** can hide a fresh release from `@latest`, and the versions host can lag a few
    hours; `MISE_USE_VERSIONS_HOST=0` asks GitHub directly.
 

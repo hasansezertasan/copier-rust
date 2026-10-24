@@ -91,6 +91,13 @@ def test_no_template_delimiters_leak_into_the_output(tmp_path, versioned_templat
                 assert not UNRENDERED.search(line), f"{path.name}:{number}: {line}"
 
 
+def test_setup_guide_describes_release_prs_as_waiting_for_approval(tmp_path, versioned_template):
+    guide = text(render(tmp_path, versioned_template, name="approval"), "REPOSITORY_SETUP.md")
+    assert guide.count("approval-required state") == 2  # the ruleset section and the known limitations
+    assert "never run on it" not in guide
+    assert "does not trigger other workflows" not in guide
+
+
 def test_crates_publish_is_optional(tmp_path, versioned_template):
     on = render(tmp_path, versioned_template, name="on")
     release = text(on, ".github/workflows/release.yml")
