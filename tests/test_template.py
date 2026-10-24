@@ -245,6 +245,28 @@ def test_update_leaves_project_owned_files_alone(tmp_path, versioned_template):
     assert answers["_commit"] == "v0.0.1"
 
 
+def test_update_leaves_a_cobo_managed_gitignore_alone(tmp_path, versioned_template):
+    dest = render(tmp_path, versioned_template)
+    assert (dest / ".gitignore").is_file()
+    git("init", "-q", "-b", "main", cwd=dest)
+    git("add", "-A", cwd=dest)
+    git("commit", "-q", "-m", "chore: render", cwd=dest)
+
+    (dest / ".gitignore").write_text("# cobo-managed\n/target\n")
+    git("commit", "-q", "-am", "chore: manage .gitignore with cobo", cwd=dest)
+
+    gitignore = versioned_template / "template/.gitignore"
+    gitignore.write_text(gitignore.read_text() + "# added in v0.0.1\n")
+    git("commit", "-q", "-am", "feat: extend the template .gitignore", cwd=versioned_template)
+    git("tag", "v0.0.1", cwd=versioned_template)
+
+    result = copier("update", "--defaults", "--skip-answered", cwd=dest)
+    assert result.returncode == 0, result.stderr
+    assert text(dest, ".gitignore") == "# cobo-managed\n/target\n"
+    changed = {line[3:] for line in git("status", "--porcelain", cwd=dest).stdout.splitlines()}
+    assert changed == {".copier-answers.yml"}
+
+
 def test_update_to_a_new_version_only_moves_the_answers_commit(tmp_path, versioned_template):
     dest = render(tmp_path, versioned_template)
     git("init", "-q", "-b", "main", cwd=dest)
