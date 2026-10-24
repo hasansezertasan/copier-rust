@@ -115,19 +115,29 @@ Run from the repository root.
   # 4. The answers-file template is in the payload, under exactly this name. A payload that is itself
   #    a template repo (it has its own template/copier.yml, as in copier-copier) holds it one level down,
   #    with a doubled suffix.
-  if [ -f template/copier.yml ]; then answers=template/template/.copier-answers.yml.jinja.jinja
-  else answers=template/.copier-answers.yml.jinja; fi
-  #    A payload with its own Jinja delimiters (convention 6) spells the same file with them.
-  if [ ! -f "$answers" ] && [ -f 'template/[[ _copier_conf.answers_file ]].jinja' ]; then
-    answers='template/[[ _copier_conf.answers_file ]].jinja'
+  if [ -f template/copier.yml ]; then
+    answers=template/template/.copier-answers.yml.jinja.jinja
+    delimited='template/template/[[ _copier_conf.answers_file ]].jinja.jinja'
+    config=template/copier.yml
+  else
+    answers=template/.copier-answers.yml.jinja
+    delimited='template/[[ _copier_conf.answers_file ]].jinja'
+    config=copier.yml
   fi
+  #    A payload with its own Jinja delimiters (convention 6) spells the same file with them, but only
+  #    when that copier.yml really configures `[[` and `]]` as the variable delimiters.
+  if grep -Eq "^[[:space:]]*['\"]?variable_start_string['\"]?[[:space:]]*:[[:space:]]*(\"\[\[\"|'\[\[')[[:space:]]*(#.*)?$" "$config" \
+    && grep -Eq "^[[:space:]]*['\"]?variable_end_string['\"]?[[:space:]]*:[[:space:]]*(\"\]\]\"|'\]\]')[[:space:]]*(#.*)?$" "$config" \
+    && [ -f "$delimited" ]; then answers=$delimited; fi
   [ -f "$answers" ] || fail "$answers is missing"
 )
 ```
 
 These are text checks, on purpose. They do not parse YAML, so an exotic spelling of a key can slip through, and
-they only require an `https://` `_src_path` with a host and a path; they cannot tell whether it names the right repository. A
-stricter check would need a YAML parser in this block, which the guide deliberately does not assume.
+they only require an `https://` `_src_path` with a host and a path; they cannot tell whether it names the right repository. The
+custom-delimiter fallback for convention 4 likewise matches the two `_envops` lines as text: it does not check that they sit
+under the top-level `_envops` mapping. A stricter check would need a YAML parser in this block, which the guide deliberately
+does not assume.
 
 Conventions 5 and 6 have no scriptable check. `mise run test` renders the template and walks a
 `copier update`, which catches a payload that does not render, but not a project-owned file that is missing
