@@ -16,3 +16,13 @@ A Copier template repo. The payload lives in `template/`; everything else is sca
 - The workflows are derived from the amb repository, where they were proven by real releases. When you change one, re-render with amb's answers and diff against amb (see docs/design.md) before trusting it.
 - Run `copier`, `uv` and `python3` from outside this repo, or after `mise trust .config/mise.toml`: mise refuses to parse an untrusted config and the shims fail.
 - Run the tests with `mise run test` (they render the template many times, including a real `cargo test` of the output, so allow about a minute).
+
+## Keep the Why
+
+This project records the reasoning behind its code with the Keep the Why
+skill (https://keepthewhy.com) — the `.keep-the-why` file at the project
+root is its config. Before doing anything else in a session, whatever the
+first request is about, load the skill: in Claude Code, invoke the
+`keep-the-why` skill (Skill tool); in any other agent, read
+`.claude/skills/keep-the-why/SKILL.md` and follow it, including the
+`references/*.md` files it points to for the situation at hand.
