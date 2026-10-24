@@ -25,7 +25,7 @@ _envops:
   lstrip_blocks: true
 
 # Written once, then owned by the generated project: `copier update` must not fight
-# a project's own dependencies, sources or release state.
+# a project's own dependencies, sources, release state or cobo-managed `.gitignore`.
 _skip_if_exists:
   - Cargo.toml
   - Cargo.lock
@@ -33,6 +33,8 @@ _skip_if_exists:
   - README.md
   - AGENTS.md
   - .github/release-please-manifest.json
+  # cobo (cobo.lock) can take this over, so `copier update` must not merge into it.
+  - .gitignore
 
 # No `_tasks`: a task makes the template "unsafe" and forces --trust, which the
 # hosted Renovate app cannot pass, so it could no longer open `copier update` PRs.
