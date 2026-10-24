@@ -129,7 +129,7 @@ def test_crates_publish_is_optional(tmp_path, versioned_template):
 def test_readme_links_back_to_the_template(tmp_path, versioned_template):
     rendered = render(tmp_path, versioned_template, name="backref")
     assert text(rendered, "README.md").rstrip().endswith(
-        "Generated from [copier-rust](https://github.com/hasansezertasan/copier-rust)."
+        "## Credits\n\nGenerated from [copier-rust](https://github.com/hasansezertasan/copier-rust)."
     )
 
 
