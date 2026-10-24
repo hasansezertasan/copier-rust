@@ -26,4 +26,5 @@ first request is about, load the skill: in Claude Code, invoke the
 `keep-the-why` skill (Skill tool); in any other agent, install the skill
 first (https://keepthewhy.com/installation/), then read its `SKILL.md` and
 follow it, including the `references/*.md` files it points to for the
-situation at hand.
+situation at hand. In Claude Code, if the skill is not available on a fresh
+clone, install it with `claude plugin install keep-the-why@keep-the-why --scope project`.

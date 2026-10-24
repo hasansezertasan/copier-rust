@@ -96,7 +96,7 @@ Neither this template nor its generated projects run Copier tasks.
 **Evidence:** confirmed
 **Source:** `copier.yml` comment above `copyright_year`
 
-The first copyright year is asked, not computed, and rendered as `<year>-present`.
+`copyright_year` is a visible question with a computed current-year default. Copier stores the resulting answer, which is rendered as `<year>-present` and is not recomputed on each `copier update`.
 
 **Reason:** Copier only stores asked questions in the answers file, so a hidden default would be re-evaluated and drift on every `copier update`; the `-present` form keeps the LICENSE from going stale.
 
