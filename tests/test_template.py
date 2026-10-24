@@ -97,7 +97,9 @@ def test_setup_guide_explains_why_release_prs_need_the_admin_bypass(tmp_path, ve
     assert guide.count("pull_request_target") >= 2  # the checks that never run on a token-created PR
     assert "bypass" in guide
     assert "never run on it" not in guide
-    assert "reopening the PR by hand starts both" in guide
+    assert "Reopening the PR by hand starts both" in guide
+    assert "Otherwise repository admins\nmerge the release PR by bypassing the ruleset" in guide
+    assert "reopening it by hand starts both" in guide  # the known limitations
     assert "a token-created PR never triggers" not in guide
     assert "never run on that PR" not in guide
     assert "does not trigger other workflows" not in guide
