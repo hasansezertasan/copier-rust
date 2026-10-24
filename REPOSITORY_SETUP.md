@@ -80,8 +80,9 @@ check in the next section.
    (the template it was generated from): if you generated from a local clone, edit it to the published URL.
 3. **No `_tasks` in `copier.yml`.** A task makes the template unsafe and forces `--trust`, which Renovate's
    copier manager does not pass. Print next steps with `_message_after_copy` instead.
-4. **The payload ships its answers file.** `template/.copier-answers.yml.jinja` is what lets generated
-   projects run `copier update`.
+4. **The payload ships its answers file.** `template/.copier-answers.yml.jinja` (or, under custom
+   delimiters, `template/[[ _copier_conf.answers_file ]].jinja`) is what lets generated projects run
+   `copier update`.
 5. **Files a project owns are listed in `_skip_if_exists`.** Anything the template must keep refreshing,
    such as workflows, stays out of it.
 6. **Payloads full of `${{ ... }}` or bash `[[ ]]` use their own Jinja delimiters** (`_envops`), and only
@@ -116,6 +117,10 @@ Run from the repository root.
   #    with a doubled suffix.
   if [ -f template/copier.yml ]; then answers=template/template/.copier-answers.yml.jinja.jinja
   else answers=template/.copier-answers.yml.jinja; fi
+  #    A payload with its own Jinja delimiters (convention 6) spells the same file with them.
+  if [ ! -f "$answers" ] && [ -f 'template/[[ _copier_conf.answers_file ]].jinja' ]; then
+    answers='template/[[ _copier_conf.answers_file ]].jinja'
+  fi
   [ -f "$answers" ] || fail "$answers is missing"
 )
 ```
