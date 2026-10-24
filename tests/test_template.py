@@ -126,6 +126,13 @@ def test_crates_publish_is_optional(tmp_path, versioned_template):
     assert "cargo install demo" not in text(off, "README.md")
 
 
+def test_readme_links_back_to_the_template(tmp_path, versioned_template):
+    rendered = render(tmp_path, versioned_template, name="backref")
+    assert text(rendered, "README.md").rstrip().endswith(
+        "Generated from [copier-rust](https://github.com/hasansezertasan/copier-rust)."
+    )
+
+
 def test_apt_packages_drive_every_linux_package_step(tmp_path, versioned_template):
     without = render(tmp_path, versioned_template, name="without")
     for name, body in workflows(without).items():
