@@ -91,6 +91,26 @@ def test_no_template_delimiters_leak_into_the_output(tmp_path, versioned_templat
                 assert not UNRENDERED.search(line), f"{path.name}:{number}: {line}"
 
 
+def test_setup_guide_explains_why_release_prs_need_the_admin_bypass(tmp_path, versioned_template):
+    guide = text(render(tmp_path, versioned_template, name="approval"), "REPOSITORY_SETUP.md")
+    assert guide.count("approval-required state") == 2  # the ruleset section and the known limitations
+    assert guide.count("pull_request_target") >= 2  # the checks that never run on a token-created PR
+    assert "bypass" in guide
+    assert "never run on it" not in guide
+    assert "does not trigger other workflows" not in guide
+
+
+def test_the_bypass_advice_follows_the_ruleset_toggle(tmp_path, versioned_template):
+    off = text(
+        render(tmp_path, versioned_template, "-d", "include_repo_ruleset=false", name="no-ruleset"),
+        "REPOSITORY_SETUP.md",
+    )
+    assert "through the ruleset bypass" not in off
+    assert "if you add a ruleset that requires them" in off
+    on = text(render(tmp_path, versioned_template, name="ruleset"), "REPOSITORY_SETUP.md")
+    assert "through the ruleset bypass" in on
+
+
 def test_crates_publish_is_optional(tmp_path, versioned_template):
     on = render(tmp_path, versioned_template, name="on")
     release = text(on, ".github/workflows/release.yml")
