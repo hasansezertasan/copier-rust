@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/hasansezertasan/copier-rust/compare/v0.2.0...v0.2.1) (2026-10-26)
+
+
+### 🐛 Bug Fixes
+
+* record that .gitignore is seeded once and updates run from copier-copier v0.3.2 ([#26](https://github.com/hasansezertasan/copier-rust/issues/26)) ([955b48a](https://github.com/hasansezertasan/copier-rust/commit/955b48abc07747cdcb512fada356644c70d7c04d))
+
 ## [0.2.0](https://github.com/hasansezertasan/copier-rust/compare/v0.1.2...v0.2.0) (2026-10-24)
 
 
