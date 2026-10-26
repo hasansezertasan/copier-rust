@@ -66,7 +66,7 @@ Neither this template nor its generated projects run Copier tasks.
 **Type:** decision
 **Status:** active
 **Evidence:** confirmed
-**Source:** `copier.yml` `_skip_if_exists` comment; `AGENTS.md`
+**Source:** `copier.yml` `_skip_if_exists` comment; `AGENTS.md`; copier-copier PR #31 (released in v0.3.2) with its ADR 0005 and the regression test in `tests/test_update_safety.py`
 
 `_skip_if_exists` lists `Cargo.toml`, `Cargo.lock`, `src`, `README.md`, `AGENTS.md`, the release-please manifest and `.gitignore`, which cobo takes over through `cobo.lock`. Anything the template must keep refreshing, such as the workflows, stays out of it.
 
