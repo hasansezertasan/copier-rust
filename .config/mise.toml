@@ -6,7 +6,7 @@ uv = "0.13.9"
 # cobo generates the sealed boilerplate blocks (.gitignore, .gitattributes, .editorconfig).
 "pipx:cobo" = "0.6.0"
 # keep-the-why-dashboard exports the Keep the Why dashboard published to GitHub Pages.
-"pipx:keep-the-why-dashboard" = "0.11.15"
+"pipx:keep-the-why-dashboard" = "0.11.45"
 
 [tasks.test]
 description = "Run the template test suite"
